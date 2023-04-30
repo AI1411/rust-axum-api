@@ -1,4 +1,4 @@
-name: Cargo Test
+name: Rust Test
 
 on:
   push:
@@ -6,19 +6,40 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: todos
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Rust
+      - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           toolchain: stable
           override: true
-          profile: minimal
 
       - name: Install dependencies
-        run: cargo install --path .
+        run: cargo build --locked
+
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli
+
+      - name: Set environment variables
+        run: echo "DATABASE_URL=postgres://root:root@localhost:5432/todos" >> $GITHUB_ENV
+
+      - name: Run migrations
+        run: sqlx migrate run
 
       - name: Run tests
-        run: cargo test -- --test-threads 1
+        run: cargo test --workspace --verbose

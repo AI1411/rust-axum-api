@@ -140,6 +140,85 @@ pub struct UpdateTodo {
 }
 
 #[cfg(test)]
+mod test {
+    use std::env;
+
+    use dotenv::dotenv;
+    use sqlx::PgPool;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn crud_scenario() {
+        dotenv().ok();
+        let database_url = &env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let pool = PgPool::connect(database_url)
+            .await
+            .expect(&format!("failed to connect database, url is [{}]", database_url));
+
+        let repository = TodoRepositoryForDb::new(pool.clone());
+        let todo_text = "test todo";
+
+        // create
+        let created = repository
+            .create(CreateTodo::new(todo_text.to_string()))
+            .await
+            .expect("failed to create todo");
+        assert_eq!(created.text, todo_text);
+        assert_eq!(created.completed, false);
+
+        // find
+        let todo = repository
+            .find(created.id)
+            .await
+            .expect("failed to find todo");
+        assert_eq!(created, todo);
+
+        // all
+        let todos = repository
+            .all()
+            .await
+            .expect("failed to find all todos");
+        let todo = todos
+            .first()
+            .unwrap();
+        assert_eq!(created, *todo);
+
+        // update
+        let updated_text = "updated todo";
+        let updated = repository
+            .update(created.id, UpdateTodo {
+                text: Some(updated_text.to_string()),
+                completed: Some(true),
+            })
+            .await
+            .expect("failed to update todo");
+        assert_eq!(created.id, todo.id);
+        assert_eq!(updated.completed, true);
+
+        // delete
+        let _ = repository
+            .delete(created.id)
+            .await
+            .expect("failed to delete todo");
+        let res = repository
+            .find(created.id)
+            .await;
+
+        let todo_rows = sqlx::query(
+            r#"
+            SELECT * FROM todos where id = $1
+            "#,
+        )
+            .bind(todo.id)
+            .fetch_all(&pool)
+            .await
+            .expect("failed to fetch all todos");
+        assert_eq!(todo_rows.len(), 0);
+    }
+}
+
+#[cfg(test)]
 pub mod test_utils {
     use std::{
         collections::HashMap,
