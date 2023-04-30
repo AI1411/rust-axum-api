@@ -57,6 +57,7 @@ mod test {
 
     #[tokio::test]
     async fn should_return_hello_world() {
+
         let repository = TodoRepositoryForMemory::new();
         let req = Request::builder().uri("/").body(Body::empty()).unwrap();
         let res = create_app(repository).oneshot(req).await.unwrap();
