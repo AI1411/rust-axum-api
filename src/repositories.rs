@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard}
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 use anyhow::Context;
@@ -23,6 +23,13 @@ pub struct Todo {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct CreateTodo {
     text: String,
+}
+
+#[cfg(test)]
+impl CreateTodo {
+    pub fn new(text: String) -> Self {
+        Self { text }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -137,16 +144,24 @@ mod test {
 
         // update
         let new_text = "new todo text".to_string();
-        let todo = repository.update(1, UpdateTodo {
-            text: Some(new_text.clone()),
-            completed: Some(true),
-        }).expect("update todo");
+        let todo = repository
+            .update(
+                1,
+                UpdateTodo {
+                    text: Some(new_text.clone()),
+                    completed: Some(true),
+                },
+            )
+            .expect("update todo");
 
-        assert_eq!(Todo {
-            id,
-            text: new_text,
-            completed: true,
-        }, todo);
+        assert_eq!(
+            Todo {
+                id,
+                text: new_text,
+                completed: true,
+            },
+            todo
+        );
 
         // delete
         let res = repository.delete(id);
