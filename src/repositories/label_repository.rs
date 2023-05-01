@@ -34,9 +34,9 @@ impl LabelRepository for LabelRepositoryForDB {
             RETURNING *
             "#,
         )
-        .bind(name.clone())
-        .fetch_optional(&self.pool)
-        .await?;
+            .bind(name.clone())
+            .fetch_optional(&self.pool)
+            .await?;
 
         if let Some(label) = optional_label {
             return Err(RepositoryError::Duplicate(label.id).into());
@@ -49,9 +49,9 @@ impl LabelRepository for LabelRepositoryForDB {
             RETURNING *
             "#,
         )
-        .bind(name.clone())
-        .fetch_one(&self.pool)
-        .await?;
+            .bind(name.clone())
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(label)
     }
@@ -62,8 +62,8 @@ impl LabelRepository for LabelRepositoryForDB {
             SELECT * FROM labels order by labels.id asc
             "#,
         )
-        .fetch_all(&self.pool)
-        .await?;
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(labels)
     }
@@ -75,11 +75,41 @@ impl LabelRepository for LabelRepositoryForDB {
             WHERE id = $1
             "#,
         )
-        .bind(id)
-        .execute(&self.pool)
-        .await?;
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::repositories::label_repository::test_utils::LabelRepositoryForMemory;
+    use super::*;
+
+    #[tokio::test]
+    async fn crud_scenario() {
+        let repository = LabelRepositoryForMemory::new();
+        let label_text = "test_label";
+
+        // create
+        let label = repository
+            .create(label_text.to_string())
+            .await
+            .expect("[create] returned Err");
+        assert_eq!(label.name, label_text);
+
+        // all
+        let labels = repository.all().await.expect("[all] returned Err");
+        let label = labels.last().unwrap();
+        assert_eq!(label.name, label_text);
+
+        // delete
+        repository
+            .delete(label.id)
+            .await
+            .expect("[delete] returned Err");
     }
 }
 
