@@ -57,7 +57,10 @@ fn create_app<Todo: TodoRepository, Label: LabelRepository>(
                 .delete(delete_todo::<Todo>)
                 .patch(update_todo::<Todo>),
         )
-        .route("/labels", post(create_label::<Label>))
+        .route(
+            "/labels",
+            post(create_label::<Label>).get(all_label::<Label>),
+        )
         .route("/labels/:id", delete(delete_label::<Label>))
         .layer(Extension(Arc::new(todo_repository)))
         .layer(Extension(Arc::new(label_repository)))

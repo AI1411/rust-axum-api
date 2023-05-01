@@ -29,10 +29,8 @@ impl LabelRepository for LabelRepositoryForDB {
     async fn create(&self, name: String) -> anyhow::Result<Label> {
         let optional_label = sqlx::query_as::<_, Label>(
             r#"
-            INSERT INTO labels (name)
-            VALUES ($1)
-            RETURNING *
-            "#,
+                select * from labels where name = $1
+                 "#,
         )
         .bind(name.clone())
         .fetch_optional(&self.pool)
@@ -44,10 +42,10 @@ impl LabelRepository for LabelRepositoryForDB {
 
         let label = sqlx::query_as::<_, Label>(
             r#"
-            INSERT INTO labels (name)
-            VALUES ($1)
-            RETURNING *
-            "#,
+                insert into labels ( name )
+                values ( $1 )
+                returning *
+                "#,
         )
         .bind(name.clone())
         .fetch_one(&self.pool)
