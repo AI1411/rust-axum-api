@@ -201,7 +201,7 @@ mod test {
             .delete(created.id)
             .await
             .expect("failed to delete todo");
-        let res = repository
+        let _res = repository
             .find(created.id)
             .await;
 
