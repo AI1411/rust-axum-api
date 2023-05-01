@@ -1,16 +1,7 @@
 use axum::async_trait;
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgPool};
-use thiserror::Error;
-use validator::Validate;
-
-#[derive(Debug, Error)]
-enum RepositoryError {
-    #[error("Unexpected Error: [{0}]")]
-    Unexpected(String),
-    #[error("NotFound, id is {0}")]
-    NotFound(i32),
-}
+use sqlx::PgPool;
+use super::RepositoryError;
+use crate::models::todo::{CreateTodo, Todo, UpdateTodo};
 
 #[derive(Debug, Clone)]
 pub struct TodoRepositoryForDb {
@@ -115,28 +106,6 @@ pub trait TodoRepository: Clone + std::marker::Send + std::marker::Sync + 'stati
     async fn all(&self) -> anyhow::Result<Vec<Todo>>;
     async fn update(&self, id: i32, payload: UpdateTodo) -> anyhow::Result<Todo>;
     async fn delete(&self, id: i32) -> anyhow::Result<()>;
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromRow)]
-pub struct Todo {
-    pub id: i32,
-    pub text: String,
-    pub completed: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Validate)]
-pub struct CreateTodo {
-    #[validate(length(min = 1, message = "Can not be empty"))]
-    #[validate(length(max = 100, message = "Over text length"))]
-    text: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Validate)]
-pub struct UpdateTodo {
-    #[validate(length(min = 1, message = "Can not be empty"))]
-    #[validate(length(max = 100, message = "Over text length"))]
-    text: Option<String>,
-    completed: Option<bool>,
 }
 
 #[cfg(test)]

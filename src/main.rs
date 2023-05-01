@@ -1,5 +1,6 @@
 mod handlers;
 mod repositories;
+mod models;
 
 use crate::repositories::todo_repository::*;
 use axum::{
@@ -58,7 +59,8 @@ async fn root() -> &'static str {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::repositories::todo_repository::{test_utils::TodoRepositoryForMemory, CreateTodo, Todo};
+    use crate::repositories::todo_repository::{test_utils::TodoRepositoryForMemory};
+    use crate::models::todo::{Todo, CreateTodo};
     use axum::response::Response;
     use axum::{
         body::Body,

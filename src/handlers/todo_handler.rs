@@ -5,7 +5,8 @@ use axum::extract::{FromRequest, Path, RequestParts};
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
-use crate::repositories::todo_repository::{CreateTodo, TodoRepository, UpdateTodo};
+use crate::models::todo::{CreateTodo, UpdateTodo};
+use crate::repositories::todo_repository::{TodoRepository};
 
 #[derive(Debug)]
 pub struct ValidatedJson<T>(T);
