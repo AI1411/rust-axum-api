@@ -34,9 +34,9 @@ impl LabelRepository for LabelRepositoryForDB {
             RETURNING *
             "#,
         )
-            .bind(name.clone())
-            .fetch_optional(&self.pool)
-            .await?;
+        .bind(name.clone())
+        .fetch_optional(&self.pool)
+        .await?;
 
         if let Some(label) = optional_label {
             return Err(RepositoryError::Duplicate(label.id).into());
@@ -49,9 +49,9 @@ impl LabelRepository for LabelRepositoryForDB {
             RETURNING *
             "#,
         )
-            .bind(name.clone())
-            .fetch_one(&self.pool)
-            .await?;
+        .bind(name.clone())
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok(label)
     }
@@ -62,8 +62,8 @@ impl LabelRepository for LabelRepositoryForDB {
             SELECT * FROM labels order by labels.id asc
             "#,
         )
-            .fetch_all(&self.pool)
-            .await?;
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(labels)
     }
@@ -75,9 +75,9 @@ impl LabelRepository for LabelRepositoryForDB {
             WHERE id = $1
             "#,
         )
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
@@ -85,8 +85,8 @@ impl LabelRepository for LabelRepositoryForDB {
 
 #[cfg(test)]
 mod test {
-    use crate::repositories::label_repository::test_utils::LabelRepositoryForMemory;
     use super::*;
+    use crate::repositories::label_repository::test_utils::LabelRepositoryForMemory;
 
     #[tokio::test]
     async fn crud_scenario() {
