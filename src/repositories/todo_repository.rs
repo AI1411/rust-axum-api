@@ -1,7 +1,7 @@
-use axum::async_trait;
-use sqlx::PgPool;
 use super::RepositoryError;
 use crate::models::todo::{CreateTodo, Todo, UpdateTodo};
+use axum::async_trait;
+use sqlx::PgPool;
 
 #[derive(Debug, Clone)]
 pub struct TodoRepositoryForDb {
@@ -24,9 +24,9 @@ impl TodoRepository for TodoRepositoryForDb {
             RETURNING *
             "#,
         )
-            .bind(payload.text.clone())
-            .fetch_one(&self.pool)
-            .await?;
+        .bind(payload.text.clone())
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok(todo)
     }
@@ -38,13 +38,13 @@ impl TodoRepository for TodoRepositoryForDb {
             WHERE id = $1
             "#,
         )
-            .bind(id)
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| match e {
-                sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
-                _ => RepositoryError::Unexpected(e.to_string()),
-            })?;
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
+            _ => RepositoryError::Unexpected(e.to_string()),
+        })?;
 
         Ok(todo)
     }
@@ -55,8 +55,8 @@ impl TodoRepository for TodoRepositoryForDb {
             SELECT * FROM todos order by id desc
             "#,
         )
-            .fetch_all(&self.pool)
-            .await?;
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(todos)
     }
@@ -71,11 +71,11 @@ impl TodoRepository for TodoRepositoryForDb {
             RETURNING *
             "#,
         )
-            .bind(payload.text.unwrap_or(old_todo.text))
-            .bind(payload.completed.unwrap_or(old_todo.completed))
-            .bind(id)
-            .fetch_one(&self.pool)
-            .await?;
+        .bind(payload.text.unwrap_or(old_todo.text))
+        .bind(payload.completed.unwrap_or(old_todo.completed))
+        .bind(id)
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok(todo)
     }
@@ -87,13 +87,13 @@ impl TodoRepository for TodoRepositoryForDb {
             WHERE id = $1
             "#,
         )
-            .bind(id)
-            .execute(&self.pool)
-            .await
-            .map_err(|e| match e {
-                sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
-                _ => RepositoryError::Unexpected(e.to_string()),
-            })?;
+        .bind(id)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => RepositoryError::NotFound(id),
+            _ => RepositoryError::Unexpected(e.to_string()),
+        })?;
 
         Ok(())
     }
@@ -121,9 +121,10 @@ mod test {
     async fn crud_scenario() {
         dotenv().ok();
         let database_url = &env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let pool = PgPool::connect(database_url)
-            .await
-            .expect(&format!("failed to connect database, url is [{}]", database_url));
+        let pool = PgPool::connect(database_url).await.expect(&format!(
+            "failed to connect database, url is [{}]",
+            database_url
+        ));
 
         let repository = TodoRepositoryForDb::new(pool.clone());
         let todo_text = "test todo";
@@ -144,22 +145,20 @@ mod test {
         assert_eq!(created, todo);
 
         // all
-        let todos = repository
-            .all()
-            .await
-            .expect("failed to find all todos");
-        let todo = todos
-            .first()
-            .unwrap();
+        let todos = repository.all().await.expect("failed to find all todos");
+        let todo = todos.first().unwrap();
         assert_eq!(created, *todo);
 
         // update
         let updated_text = "updated todo";
         let updated = repository
-            .update(created.id, UpdateTodo {
-                text: Some(updated_text.to_string()),
-                completed: Some(true),
-            })
+            .update(
+                created.id,
+                UpdateTodo {
+                    text: Some(updated_text.to_string()),
+                    completed: Some(true),
+                },
+            )
             .await
             .expect("failed to update todo");
         assert_eq!(created.id, todo.id);
@@ -170,19 +169,17 @@ mod test {
             .delete(created.id)
             .await
             .expect("failed to delete todo");
-        let _res = repository
-            .find(created.id)
-            .await;
+        let _res = repository.find(created.id).await;
 
         let todo_rows = sqlx::query(
             r#"
             SELECT * FROM todos where id = $1
             "#,
         )
-            .bind(todo.id)
-            .fetch_all(&pool)
-            .await
-            .expect("failed to fetch all todos");
+        .bind(todo.id)
+        .fetch_all(&pool)
+        .await
+        .expect("failed to fetch all todos");
         assert_eq!(todo_rows.len(), 0);
     }
 }

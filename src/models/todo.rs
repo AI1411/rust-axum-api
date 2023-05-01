@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow};
+use sqlx::FromRow;
 use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, FromRow)]
